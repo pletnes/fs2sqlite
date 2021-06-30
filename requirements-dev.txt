@@ -1,0 +1,7 @@
+black
+datasette
+icecream
+isort
+mypy
+pylint
+wheel
