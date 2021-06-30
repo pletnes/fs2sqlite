@@ -4,21 +4,22 @@ import dataclasses
 import os
 import pathlib
 import sqlite3
+import sys
 from dataclasses import dataclass
-
-from icecream import ic
 
 
 @dataclass(frozen=True)
 class RawFileInfo:
+    """
+    Raw file information as returned from the filesystem APIs.
+    """
+
     path: str
     dirname: str
     basename: str
     suffix: str
     is_dir: bool
     prefix: str
-    # UNIX file mode e.g. "chmod 700"
-    # mode: int
     inode: int
     size_bytes: int
     nlinks: int
@@ -77,7 +78,8 @@ def init_db(fname: os.PathLike) -> sqlite3.Connection:
             """
             )
     except sqlite3.OperationalError as err:
-        ic("The db was inited already")
+        print("The database already exists - stopping")
+        sys.exit(1)
 
     return con
 
@@ -85,15 +87,12 @@ def init_db(fname: os.PathLike) -> sqlite3.Connection:
 def main():
     root_path = pathlib.Path(".").absolute()
     all_entries = fs_entries(root_path)
-    import itertools
-
-    # all_entries = itertools.islice(all_entries, 22)
 
     con = init_db("files.db")
 
     for count, entry in enumerate(all_entries):
         if count % 100 == 0:
-            ic(count)
+            print(f"Inserted {count:8d} files...")
         with con:
             con.execute(
                 """
